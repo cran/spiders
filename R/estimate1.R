@@ -42,20 +42,24 @@ est1 <- function(Xdst, Ydst, J, I, EM, em_maxiter, BALANCED) {
             ## limit iterations
             em_iter <- em_iter+1
             if ( em_iter > em_maxiter ) {
-                stop(sprintf('est1: max EM iterations, %d, reached. Please adjust accordingly.', em_maxiter))
+                stop(sprintf("est1: max EM iterations, %d, reached. Please adjust accordingly.", em_maxiter))
             }
-
         }
 
         ## calc standard error with est params
         egamma <- exp(gammaHat)
         Info <- diag(unlist(Ydst/gammaHat^2 + J*egamma/(egamma - 1)^2))
+        tryCatch(var <- solve(Info),
+                 error=function(e) {
+                     print("Variances not calculated; system is singular.")
+                     var <- NULL
+                 })
         
         ## calc loglik with est params
         loglik <- llEM(Xdst, Ydst, gammaHat, gammaHat, J, I)
         
-        list('lambda' = as.matrix(gammaHat), 'gamma' = as.matrix(gammaHat),
-             'll' = loglik, 'var' = solve(Info))
+        list(lambda=as.matrix(gammaHat), gamma=as.matrix(gammaHat),
+             ll=loglik, var=var)
         
     } else {
         
@@ -68,7 +72,7 @@ est1 <- function(Xdst, Ydst, J, I, EM, em_maxiter, BALANCED) {
         ## calc loglik with est params
         loglik <- ll(Xdst, Ydst, gammaHat, gammaHat, J, I)
 
-        list('lambda' = as.matrix(gammaHat), 'gamma' = as.matrix(gammaHat),
-             'll' = loglik, 'var' = solve(Info))        
+        list(lambda=as.matrix(gammaHat), gamma=as.matrix(gammaHat),
+             ll=loglik, var=solve(Info))        
     }
 }
